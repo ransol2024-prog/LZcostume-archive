@@ -157,16 +157,17 @@
   }
   .field input[type="number"]{ width:64px; }
 
-  table.costume-table{ width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-  table.costume-table th{
-    text-align:left; font-size:11px; color:var(--ink-faint); font-weight:500;
-    padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg);
+  .episode-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 22px; margin-bottom:14px;
   }
-  table.costume-table td{
-    padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle;
-  }
-  table.costume-table tr:last-child td{ border-bottom:none; }
-  table.costume-table tr:hover td{ background:#FBFBF9; }
+  .episode-card .ep-header{ display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+  .episode-card .ep-num{ font-family:'Gowun Batang', serif; font-size:20px; font-weight:700; color:var(--accent); }
+  .ep-row{ display:flex; gap:16px; padding:9px 0; border-top:1px solid var(--border); align-items:flex-start; }
+  .ep-row:first-of-type{ border-top:none; }
+  .ep-row .ep-char{ min-width:100px; font-size:13px; font-weight:600; color:var(--ink); flex-shrink:0; padding-top:2px; }
+  .ep-row .ep-costumes{ display:flex; gap:4px; flex-wrap:wrap; align-items:center; }
+  .ep-costumes .sep{ color:var(--ink-faint); }
 
   .costume-link-wrap{ position:relative; display:inline-block; }
   .costume-link{ color:var(--accent); text-decoration:underline; cursor:pointer; }
@@ -231,18 +232,9 @@
       <button class="filter-reset" id="costume-reset">필터 초기화</button>
     </div>
 
-    <table class="costume-table">
-      <thead>
-        <tr>
-          <th style="width:70px">회차</th>
-          <th style="width:140px">캐릭터</th>
-          <th>의상명</th>
-        </tr>
-      </thead>
-      <tbody id="costume-tbody">
-        <tr><td colspan="3" class="empty-msg">불러오는 중…</td></tr>
-      </tbody>
-    </table>
+    <div class="episode-list" id="episode-list">
+      <div class="empty-msg">불러오는 중…</div>
+    </div>
   </section>
 
 </main>
@@ -288,7 +280,7 @@ async function loadData(){
     renderTagFilters();
     renderCharacterGrid();
     populateCharSelect();
-    renderCostumeTable();
+    renderCostumeList();
   }catch(err){
     document.getElementById('char-grid').innerHTML =
       '<div class="empty-msg">데이터를 불러오지 못했습니다. API_URL이 올바른지 확인해주세요.<br>' + err + '</div>';
@@ -375,8 +367,8 @@ function populateCharSelect(){
     names.map(n => `<option value="${n}">${n}</option>`).join('');
 }
 
-function renderCostumeTable(){
-  const tbody = document.getElementById('costume-tbody');
+function renderCostumeList(){
+  const container = document.getElementById('episode-list');
   const epMin = document.getElementById('ep-min').value;
   const epMax = document.getElementById('ep-max').value;
   const charSel = document.getElementById('char-select').value;
@@ -386,25 +378,47 @@ function renderCostumeTable(){
     if(epMax && c.episode > Number(epMax)) return false;
     if(charSel !== 'all' && c.character !== charSel) return false;
     return true;
-  }).sort((a,b) => a.episode - b.episode || a.character.localeCompare(b.character));
+  });
 
   if(filtered.length === 0){
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">조건에 맞는 의상이 없습니다.</td></tr>';
+    container.innerHTML = '<div class="empty-msg">조건에 맞는 의상이 없습니다.</div>';
     return;
   }
 
-  tbody.innerHTML = filtered.map(c => `
-    <tr>
-      <td>${c.episode}</td>
-      <td>${c.character}</td>
-      <td>
-        <div class="costume-link-wrap">
-          <a class="costume-link" href="${c.downloadLink || '#'}" target="_blank" rel="noopener">${c.costumeName}</a>
-          ${c.image ? `<div class="costume-preview"><img src="${toDirectImageUrl(c.image)}" alt="${c.costumeName}"></div>` : ''}
+  // 회차 -> 캐릭터 -> [의상 항목들] 구조로 묶기
+  const epMap = new Map();
+  filtered.forEach(c => {
+    if(!epMap.has(c.episode)) epMap.set(c.episode, new Map());
+    const charMap = epMap.get(c.episode);
+    if(!charMap.has(c.character)) charMap.set(c.character, []);
+    charMap.get(c.character).push(c);
+  });
+
+  const sortedEpisodes = [...epMap.keys()].sort((a,b) => a - b);
+
+  container.innerHTML = sortedEpisodes.map(ep => {
+    const charMap = epMap.get(ep);
+    const rows = [...charMap.entries()].map(([character, items]) => `
+      <div class="ep-row">
+        <div class="ep-char">${character}</div>
+        <div class="ep-costumes">
+          ${items.map((it, i) => `
+            ${i > 0 ? '<span class="sep">,</span>' : ''}
+            <div class="costume-link-wrap">
+              <a class="costume-link" href="${it.downloadLink || '#'}" target="_blank" rel="noopener">${it.costumeName || '(의상명 미입력)'}</a>
+              ${it.image ? `<div class="costume-preview"><img src="${toDirectImageUrl(it.image)}" alt="${it.costumeName}"></div>` : ''}
+            </div>
+          `).join('')}
         </div>
-      </td>
-    </tr>
-  `).join('');
+      </div>
+    `).join('');
+    return `
+      <div class="episode-card">
+        <div class="ep-header"><span class="ep-num">${ep}화</span></div>
+        ${rows}
+      </div>
+    `;
+  }).join('');
 }
 
 document.querySelectorAll('nav.tabs button').forEach(btn => {
@@ -417,13 +431,13 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
 });
 
 ['ep-min','ep-max','char-select'].forEach(id => {
-  document.getElementById(id).addEventListener('input', renderCostumeTable);
+  document.getElementById(id).addEventListener('input', renderCostumeList);
 });
 document.getElementById('costume-reset').addEventListener('click', () => {
   document.getElementById('ep-min').value = '';
   document.getElementById('ep-max').value = '';
   document.getElementById('char-select').value = 'all';
-  renderCostumeTable();
+  renderCostumeList();
 });
 
 loadData();
