@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>의상 아카이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --bg:#F6F6F3;
+    --surface:#FFFFFF;
+    --border:#E4E3DD;
+    --ink:#1B1B18;
+    --ink-soft:#6B6A62;
+    --ink-faint:#9C9A90;
+    --accent:#2B3A55;
+    --accent-soft:#E8ECF2;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Pretendard', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:'Gowun Batang', serif; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:28px 48px 20px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+  }
+  header h1{
+    font-family:'Gowun Batang', serif;
+    font-size:22px; font-weight:700; margin:0;
+    letter-spacing:0.5px;
+  }
+  header .sub{ font-size:12px; color:var(--ink-faint); margin-top:4px; }
+  nav.tabs{ display:flex; gap:6px; }
+  nav.tabs button{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-soft);
+    padding:9px 18px;
+    border-radius:999px;
+    font-size:14px;
+    font-family:'Pretendard', sans-serif;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  nav.tabs button.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  main{ max-width:1240px; margin:0 auto; padding:32px 48px 80px; }
+  section[hidden]{ display:none !important; }
+
+  /* 공통색상 바 */
+  .common-bar{
+    display:flex; align-items:center; gap:22px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px 20px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .common-bar .label{
+    font-size:12px; color:var(--ink-faint); white-space:nowrap;
+    letter-spacing:0.5px;
+  }
+  .swatch-mini{ display:flex; align-items:center; gap:8px; }
+  .swatch-mini .chip{
+    width:22px; height:22px; border-radius:6px; border:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .swatch-mini .txt{ font-size:12px; color:var(--ink-soft); }
+  .swatch-mini .txt .hex{ color:var(--ink-faint); font-size:11px; margin-left:4px; }
+
+  /* 태그 필터 */
+  .filter-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:26px; }
+  .tag-chip{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-soft);
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tag-chip.active{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .filter-reset{
+    font-size:12px; color:var(--ink-faint); text-decoration:underline; cursor:pointer;
+    margin-left:4px; background:none; border:none;
+  }
+
+  /* 캐릭터 그리드 */
+  .char-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:20px;
+  }
+  .char-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .char-card .thumb{
+    width:100%; aspect-ratio:3/4; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .char-card .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .char-card .thumb .placeholder{ font-size:12px; color:var(--ink-faint); }
+  .char-card .body{ padding:16px 16px 18px; display:flex; flex-direction:column; gap:10px; }
+  .char-card .name{ font-size:19px; font-weight:700; line-height:1.3; }
+  .char-card .desc{ font-size:12px; color:var(--ink-soft); margin-top:-6px; }
+  .char-card .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .char-card .tags span{
+    font-size:11px; color:var(--ink-faint);
+    border:1px solid var(--border); border-radius:6px; padding:2px 7px;
+  }
+  .swatch-strip{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+  .swatch{ display:flex; flex-direction:column; align-items:center; gap:5px; width:52px; }
+  .swatch .block{ width:36px; height:36px; border-radius:8px; border:1px solid rgba(0,0,0,.08); }
+  .swatch .label{ font-size:10px; color:var(--ink-soft); text-align:center; }
+  .swatch .hex{ font-size:9px; color:var(--ink-faint); text-align:center; }
+
+  /* 의상 탭 */
+  .costume-filters{
+    display:flex; align-items:flex-end; gap:24px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:24px;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:11px; color:var(--ink-faint); letter-spacing:0.3px; }
+  .field .range-inputs{ display:flex; align-items:center; gap:6px; }
+  .field input, .field select{
+    border:1px solid var(--border); border-radius:6px; padding:7px 10px;
+    font-size:13px; font-family:'Pretendard', sans-serif; color:var(--ink);
+    background:var(--bg);
+  }
+  .field input[type="number"]{ width:64px; }
+
+  table.costume-table{ width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  table.costume-table th{
+    text-align:left; font-size:11px; color:var(--ink-faint); font-weight:500;
+    padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg);
+  }
+  table.costume-table td{
+    padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle;
+  }
+  table.costume-table tr:last-child td{ border-bottom:none; }
+  table.costume-table tr:hover td{ background:#FBFBF9; }
+
+  .costume-link-wrap{ position:relative; display:inline-block; }
+  .costume-link{ color:var(--accent); text-decoration:underline; cursor:pointer; }
+  .costume-preview{
+    position:absolute; left:0; top:calc(100% + 8px); z-index:20;
+    width:150px; border-radius:8px; overflow:hidden;
+    border:1px solid var(--border); background:var(--surface);
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    opacity:0; visibility:hidden; transform:translateY(-4px);
+    transition:all .15s ease;
+    pointer-events:none;
+  }
+  .costume-preview img{ width:100%; display:block; }
+  .costume-link-wrap:hover .costume-preview{ opacity:1; visibility:visible; transform:translateY(0); }
+
+  .empty-msg{ padding:40px; text-align:center; color:var(--ink-faint); font-size:13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>의상 아카이브</h1>
+    <div class="sub" id="updated-at">불러오는 중…</div>
+  </div>
+  <nav class="tabs">
+    <button class="active" data-tab="characters">캐릭터</button>
+    <button data-tab="costumes">의상</button>
+  </nav>
+</header>
+
+<main>
+
+  <section id="tab-characters">
+    <div class="common-bar" id="common-bar">
+      <span class="label">공통 색상</span>
+    </div>
+
+    <div class="filter-row" id="tag-filter-row"></div>
+
+    <div class="char-grid" id="char-grid">
+      <div class="empty-msg">불러오는 중…</div>
+    </div>
+  </section>
+
+  <section id="tab-costumes" hidden>
+    <div class="costume-filters">
+      <div class="field">
+        <label>회차 범위</label>
+        <div class="range-inputs">
+          <input type="number" id="ep-min" placeholder="처음">
+          <span>~</span>
+          <input type="number" id="ep-max" placeholder="끝">
+        </div>
+      </div>
+      <div class="field">
+        <label>캐릭터</label>
+        <select id="char-select">
+          <option value="all">전체</option>
+        </select>
+      </div>
+      <button class="filter-reset" id="costume-reset">필터 초기화</button>
+    </div>
+
+    <table class="costume-table">
+      <thead>
+        <tr>
+          <th style="width:70px">회차</th>
+          <th style="width:140px">캐릭터</th>
+          <th>의상명</th>
+        </tr>
+      </thead>
+      <tbody id="costume-tbody">
+        <tr><td colspan="3" class="empty-msg">불러오는 중…</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<script>
+// ⚠️ 아래에 Apps Script 배포 후 발급받은 웹 앱 URL(.../exec 로 끝남)을 붙여넣으세요.
+const API_URL = "https://script.google.com/macros/s/AKfycbyF67Idh9qIiqhjiDkfsiOvH78xPoxOkYcEvC2pBkpbrWDYYCOtbAAGFssQrDvPeB3s/exec";
+
+const state = {
+  characters: [],
+  costumes: [],
+  commonColors: [],
+  activeTags: new Set()
+};
+
+async function loadData(){
+  try{
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    state.characters = data.characters || [];
+    state.costumes = data.costumes || [];
+    state.commonColors = data.commonColors || [];
+
+    document.getElementById('updated-at').textContent =
+      '최종 업데이트: ' + new Date(data.generatedAt || Date.now()).toLocaleString('ko-KR');
+
+    renderCommonBar();
+    renderTagFilters();
+    renderCharacterGrid();
+    populateCharSelect();
+    renderCostumeTable();
+  }catch(err){
+    document.getElementById('char-grid').innerHTML =
+      '<div class="empty-msg">데이터를 불러오지 못했습니다. API_URL이 올바른지 확인해주세요.<br>' + err + '</div>';
+  }
+}
+
+function renderCommonBar(){
+  const bar = document.getElementById('common-bar');
+  const chips = state.commonColors.map(c => `
+    <div class="swatch-mini">
+      <div class="chip" style="background:${c.hex}"></div>
+      <div class="txt">${c.label}<span class="hex">${c.hex}</span></div>
+    </div>
+  `).join('');
+  bar.innerHTML = '<span class="label">공통 색상</span>' + chips;
+}
+
+function renderTagFilters(){
+  const allTags = new Set();
+  state.characters.forEach(c => c.tags.forEach(t => allTags.add(t)));
+  const row = document.getElementById('tag-filter-row');
+  row.innerHTML = [...allTags].map(t =>
+    `<button class="tag-chip" data-tag="${t}">${t}</button>`
+  ).join('') + '<button class="filter-reset" id="tag-reset">필터 초기화</button>';
+
+  row.querySelectorAll('.tag-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      if(state.activeTags.has(tag)){
+        state.activeTags.delete(tag);
+        btn.classList.remove('active');
+      }else{
+        state.activeTags.add(tag);
+        btn.classList.add('active');
+      }
+      renderCharacterGrid();
+    });
+  });
+  document.getElementById('tag-reset').addEventListener('click', () => {
+    state.activeTags.clear();
+    row.querySelectorAll('.tag-chip').forEach(b => b.classList.remove('active'));
+    renderCharacterGrid();
+  });
+}
+
+function renderCharacterGrid(){
+  const grid = document.getElementById('char-grid');
+  const filtered = state.characters.filter(c =>
+    state.activeTags.size === 0 || c.tags.some(t => state.activeTags.has(t))
+  );
+
+  if(filtered.length === 0){
+    grid.innerHTML = '<div class="empty-msg">조건에 맞는 캐릭터가 없습니다.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(c => `
+    <div class="char-card">
+      <div class="thumb">
+        ${c.image ? `<img src="${c.image}" alt="${c.name}" loading="lazy">` : `<span class="placeholder">이미지 없음</span>`}
+      </div>
+      <div class="body">
+        <div class="name serif">${c.name}</div>
+        ${c.description ? `<div class="desc">${c.description}</div>` : ''}
+        <div class="tags">${c.tags.map(t => `<span>${t}</span>`).join('')}</div>
+        <div class="swatch-strip">
+          ${c.colors.map(col => `
+            <div class="swatch">
+              <div class="block" style="background:${col.hex}"></div>
+              <div class="label">${col.label}</div>
+              <div class="hex mono">${col.hex}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function populateCharSelect(){
+  const select = document.getElementById('char-select');
+  const names = [...new Set(state.costumes.map(c => c.character))].sort();
+  select.innerHTML = '<option value="all">전체</option>' +
+    names.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function renderCostumeTable(){
+  const tbody = document.getElementById('costume-tbody');
+  const epMin = document.getElementById('ep-min').value;
+  const epMax = document.getElementById('ep-max').value;
+  const charSel = document.getElementById('char-select').value;
+
+  const filtered = state.costumes.filter(c => {
+    if(epMin && c.episode < Number(epMin)) return false;
+    if(epMax && c.episode > Number(epMax)) return false;
+    if(charSel !== 'all' && c.character !== charSel) return false;
+    return true;
+  }).sort((a,b) => a.episode - b.episode || a.character.localeCompare(b.character));
+
+  if(filtered.length === 0){
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">조건에 맞는 의상이 없습니다.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td>${c.episode}</td>
+      <td>${c.character}</td>
+      <td>
+        <div class="costume-link-wrap">
+          <a class="costume-link" href="${c.downloadLink || '#'}" target="_blank" rel="noopener">${c.costumeName}</a>
+          ${c.image ? `<div class="costume-preview"><img src="${c.image}" alt="${c.costumeName}"></div>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-characters').hidden = btn.dataset.tab !== 'characters';
+    document.getElementById('tab-costumes').hidden = btn.dataset.tab !== 'costumes';
+  });
+});
+
+['ep-min','ep-max','char-select'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderCostumeTable);
+});
+document.getElementById('costume-reset').addEventListener('click', () => {
+  document.getElementById('ep-min').value = '';
+  document.getElementById('ep-max').value = '';
+  document.getElementById('char-select').value = 'all';
+  renderCostumeTable();
+});
+
+loadData();
+</script>
+</body>
+</html>
