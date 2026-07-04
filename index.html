@@ -258,6 +258,21 @@ const state = {
   activeTags: new Set()
 };
 
+// 드롭박스 공유 링크(www.dropbox.com/...)를 <img>에서 바로 쓸 수 있는
+// 원본 파일 링크(dl.dropboxusercontent.com)로 자동 변환
+function toDirectImageUrl(url){
+  if(!url) return url;
+  try{
+    const u = new URL(url.trim());
+    if(u.hostname.includes('dropbox.com')){
+      u.hostname = 'dl.dropboxusercontent.com';
+      u.searchParams.delete('dl');
+      return u.toString();
+    }
+  }catch(e){ /* URL 형식이 아니면 그대로 반환 */ }
+  return url;
+}
+
 async function loadData(){
   try{
     const res = await fetch(API_URL);
@@ -333,7 +348,7 @@ function renderCharacterGrid(){
   grid.innerHTML = filtered.map(c => `
     <div class="char-card">
       <div class="thumb">
-        ${c.image ? `<img src="${c.image}" alt="${c.name}" loading="lazy">` : `<span class="placeholder">이미지 없음</span>`}
+        ${c.image ? `<img src="${toDirectImageUrl(c.image)}" alt="${c.name}" loading="lazy">` : `<span class="placeholder">이미지 없음</span>`}
       </div>
       <div class="body">
         <div class="name serif">${c.name}</div>
@@ -385,7 +400,7 @@ function renderCostumeTable(){
       <td>
         <div class="costume-link-wrap">
           <a class="costume-link" href="${c.downloadLink || '#'}" target="_blank" rel="noopener">${c.costumeName}</a>
-          ${c.image ? `<div class="costume-preview"><img src="${c.image}" alt="${c.costumeName}"></div>` : ''}
+          ${c.image ? `<div class="costume-preview"><img src="${toDirectImageUrl(c.image)}" alt="${c.costumeName}"></div>` : ''}
         </div>
       </td>
     </tr>
